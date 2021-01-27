@@ -1,68 +1,50 @@
-import 'package:BTest/SignIn.dart';
+import 'package:BTest/signin_button.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'buttonBuilder.dart';
 
-class SignInButton extends StatelessWidget {
-  final Function onPressed;
-  final ButtonsEnum button;
+class GoogleSignInWidget extends StatefulWidget {
+  @override
+  GoogleSignInState createState() => new GoogleSignInState();
+}
 
-  /// mini is a boolean field which specify whether to use a square mini button.
-  final bool mini;
-
-  /// shape is to specify the custom shape of the widget.
-  final ShapeBorder shape;
-  final String text;
-
-  /// overrides the default button text
-  final EdgeInsets padding;
-
-  /// overrides the default button padding
-  final double elevation; // overrides the default button elevation
-
-  /// The constructor is fairly self-explanatory.
-  SignInButton(
-    this.button,
-    this.onPressed, {
-    this.mini = false,
-    this.padding = const EdgeInsets.all(0),
-    this.shape,
-    this.text,
-    this.elevation = 2.0,
-  })  : assert(button != null),
-        assert(onPressed != null);
+class GoogleSignInState extends State<GoogleSignInWidget> {
+  GoogleSignIn _googleSignIn = GoogleSignIn();
+  GoogleSignInAccount _currentUser;
 
   Widget build(BuildContext context) {
-    return SignInButtonBuilder(
-      elevation: elevation,
-      key: ValueKey("Google"),
-      text: text ?? 'Sign in with Google',
-      textColor: button == ButtonsEnum.Google
-          ? Color.fromRGBO(0, 0, 0, 0.54)
-          : Color(0xFFFFFFFF),
-      image: Container(
-        margin: EdgeInsets.fromLTRB(0.0, 0.0, 10.0, 0.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image(
-            image: AssetImage(
-              button == ButtonsEnum.Google
-                  ? 'assets/logos/google_light.png'
-                  : 'assets/logos/google_dark.png',
-              package: 'flutter_signin_button',
+    if (_currentUser != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
+          ListTile(
+            leading: GoogleUserCircleAvatar(
+              identity: _currentUser,
             ),
-            height: 36.0,
+            title: Text(_currentUser.displayName ?? ''),
+            subtitle: Text(_currentUser.email ?? ''),
           ),
-        ),
-      ),
-      backgroundColor:
-          button == ButtonsEnum.Google ? Color(0xFFFFFFFF) : Color(0xFF4285F4),
-      onPressed: onPressed,
-      padding: padding,
-      innerPadding: EdgeInsets.all(0),
-      shape: shape,
-      height: 36.0,
-    );
+          const Text("Signed in successfully."),
+          ElevatedButton(
+              child: const Text('SIGN OUT'), onPressed: _handleSignOut),
+          ElevatedButton(child: const Text('REFRESH'), onPressed: () {}),
+        ],
+      );
+    } else {
+      return new GoogleSignInButton(ButtonsEnum.Google, () => runSignIn());
+    }
   }
+
+  Future<void> runSignIn() async {
+    try {
+      await this._googleSignIn.signIn();
+    } catch (error) {
+      print(error);
+    }
+  }
+
+  Future<void> _handleSignOut() => _googleSignIn.disconnect();
 }
 
 class GoogleSignInButton extends SignInButton {
@@ -103,7 +85,9 @@ class GoogleSignInButton extends SignInButton {
       ),
       backgroundColor:
           button == ButtonsEnum.Google ? Color(0xFFFFFFFF) : Color(0xFF4285F4),
-      onPressed: onPressed,
+      onPressed: () {
+        this.onPressed();
+      },
       padding: padding,
       innerPadding: EdgeInsets.all(0),
       shape: shape,
@@ -111,3 +95,7 @@ class GoogleSignInButton extends SignInButton {
     );
   }
 }
+
+//abbc7506@gmail.com
+//client id 801841601791-6ijbpvp6m9h1tvrc46jmq57ooijvuide.apps.googleusercontent.com
+//client secret: UsmJKn_g_esWpuW5yRaONSJp
